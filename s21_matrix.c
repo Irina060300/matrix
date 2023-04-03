@@ -1,6 +1,8 @@
 #include "s21_matrix.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+
 int s21_create_matrix(int rows, int columns, matrix_t *result) {
     int err = SUCCESS;
     result->matrix = malloc(sizeof(double *)* rows);
@@ -33,33 +35,67 @@ void s21_remove_matrix(matrix_t *A) {
     }
     free(A->matrix);
 }
-int main() {
-    matrix_t A, B, result;
-    int rows_a = 4, cols_a = 4, rows_b = 3, cols_b = 3;
-    s21_create_matrix(rows_a, cols_a, &A);
-    // s21_create_matrix(rows_b, cols_b, &B);
-    for (int i = 0; i < rows_a; i++) {
-        for (int j = 0; j < cols_a; j++) {
-            A.matrix[i][j] =rand() % 20;
-        }
-    }
-    // for (int i = 0; i < rows_b; i++) {
-    //     for (int j = 0; j < cols_b; j++) {
-    //         B.matrix[i][j] = (double) (rand() % 50) / 2;
-    //     }
-    // }
-    // int res = s21_sub_matrix(&A, &B, &result);
-    //s21_transpose(&A, &result);
-    print_matrix(A);
+// int main() {
+//     // matrix_t A, result;
+//     // int rows_a = 3, cols_a = 3;
+//     // s21_create_matrix(rows_a, cols_a, &A);
+//     // A.matrix[0][0] = 1;
+//     // A.matrix[0][1] = 2;
+//     // A.matrix[0][2] = 3;
+//     // A.matrix[1][0] = 0;
+//     // A.matrix[1][1] = 4;
+//     // A.matrix[1][2] = 2;
+//     // A.matrix[2][0] = 5;
+//     // A.matrix[2][1] = 2;
+//     // A.matrix[2][2] = 1;
+//     // // s21_create_matrix(rows_b, cols_b, &B);
+//     // // for (int i = 0; i < rows_a; i++) {
+//     // //     for (int j = 0; j < cols_a; j++) {
+//     // //         A.matrix[i][j] =rand() % 15;
+//     // //     }
+//     // // }
+//     // // for (int i = 0; i < rows_b; i++) {
+//     // //     for (int j = 0; j < cols_b; j++) {
+//     // //         B.matrix[i][j] = (double) (rand() % 50) / 2;
+//     // //     }
+//     // // }
+//     // // int res = s21_sub_matrix(&A, &B, &result);
+//     // //s21_transpose(&A, &result);
+//     // print_matrix(A);
 
-    double ros = 0;
-    int max_size = 4;
-    mat_det(&A, 4, &ros, max_size); 
-    printf("RESSS %lf", ros);
-    // print_matrix(B);
-    //print_matrix(result);
-    return 0;
-}
+//     // // double ros = 0;
+//     // // // int max_size = 5;
+//     // // ros = det(&A, 3); 
+//     // //printf("RESSS %lf", ros);
+//     // s21_inverse_matrix(&A, &result);
+//     // print_matrix(result);
+//     // s21_remove_matrix(&A);
+//     // s21_remove_matrix(&result);
+//     // // print_matrix(B);
+//     unsigned int seed = 0;
+//     const int rows = rand_r(&seed) % 100 + 1;
+//     const int cols = rand_r(&seed) % 100 + 1;
+//     matrix_t A = {0}, B = {0}, check = {0}, result = {0};
+//     s21_create_matrix(rows, cols, &A);
+//     s21_create_matrix(rows, cols, &B);
+//     s21_create_matrix(rows, cols, &check);
+//     double k = 0.1;
+//     for (int i = 0; i < rows; i++) {
+//         for (int j = 0; j < cols; j++) {
+//             double rand_val = (double) (rand_r(&seed) % 3001 - 1500 + k);
+//             A.matrix[i][j] = rand_val;
+//             B.matrix[i][j] = rand_val + 0.015;
+//             check.matrix[i][j] = A.matrix[i][j] + B.matrix[i][j];
+//             k += 0.000001;
+//         }
+//     }
+//     s21_sum_matrix(&A, &B, &result);
+//     int c = s21_eq_matrix(&check, &result);
+//     printf("%d\n", c);
+//     // print_matrix(check);
+//     // print_matrix(result);
+//     return 0;
+// }
 
 int s21_eq_matrix(matrix_t *A, matrix_t *B) {
     int err = SUCCESS;
@@ -68,8 +104,10 @@ int s21_eq_matrix(matrix_t *A, matrix_t *B) {
         int rows = A->rows, cols = A->columns;
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                if (A->matrix[i][j] != B->matrix[i][j]) {
+                if (fabs(A->matrix[i][j]) < 1e-300 && fabs(B->matrix[i][j]) < 1e-300) continue;
+                if (fabs(A->matrix[i][j] - B->matrix[i][j]) > 1e-16) {
                     err = FAILURE;
+                    //printf("A[%d][%d] = %.16lf, B[%d][%d] = %.16lf\n", i, j, A->matrix[i][j], i, j, B->matrix[i][j]);
                     break;
                 }
             }
@@ -135,7 +173,7 @@ int s21_mult_number(matrix_t *A, double number, matrix_t *result) {
         if (s21_create_matrix(rows, cols, result)) {
             for (int i = 0; i < rows; i++) {
                 for (int j = 0; j < cols; j++) 
-                    result->matrix[i][j] = A->matrix[i][j] * number;
+                    if (fabs(A->matrix[i][j]) > 1e-300) result->matrix[i][j] = A->matrix[i][j] * number;
             }
         } else err = FAILURE;
     } else err = FAILURE;
@@ -180,70 +218,99 @@ int s21_transpose(matrix_t *A, matrix_t *result) {
     return err;
 }
 
-double two_det (matrix_t *mat) { return mat->matrix[0][0]* mat->matrix[1][1] 
-- mat->matrix[1][0]* mat->matrix[0][1];}
+double two_det (matrix_t *mat) { 
+    double res = mat->matrix[0][0]* mat->matrix[1][1] - mat->matrix[1][0]* mat->matrix[0][1];
+    if (fabs(res) < 1e-30) res = 0;
+    return res;
+}
 
-void cut_matrix(int no, matrix_t *tmp, matrix_t *mat, int size) {
+void cut_matrix(int no_i, int no_j, matrix_t *tmp, matrix_t *mat, int size) {
     int i_tmp = 0, j_tmp = 0;
     for (int i = 0; i < size; i++) {
         j_tmp = 0;
         for (int j = 0; j < size; j++) {
-            if (i != 0 && j != no) {
+            if (i != no_i && j != no_j) {
                 tmp->matrix[i_tmp][j_tmp] = mat->matrix[i][j];
                 j_tmp++;
             }
         }
-        if (i != 0) i_tmp++;
+        if (i != no_i) i_tmp++;
     }
     //print_matrix(*tmp);
 }
 
-void mat_det (matrix_t *mat, int size, double *result, int max_size) {
-    matrix_t tmp; 
-    int tmp_size = 0;
-    static double res;
-    int flag = 0;
-    for (int i = 0; i < size; i++) {
-        tmp_size = size - 1;
-        s21_create_matrix(tmp_size, tmp_size, &tmp);
-        if (size > 2) {
-            cut_matrix(i, &tmp, mat, size);
-            mat_det (&tmp, tmp_size, result, max_size);
+double det(matrix_t *mat, int size_matrix) {
+    if (size_matrix == 1) return mat->matrix[0][0];
+    else if (size_matrix == 2) return two_det(mat);
+    else {       
+        double determ = 0.0, sign = 1;
+        matrix_t tmp;
+        s21_create_matrix(size_matrix, size_matrix, &tmp);
+        for (int j = 0; j < size_matrix; j++) {
+            cut_matrix(0, j, &tmp, mat, size_matrix);
+            determ += sign * mat->matrix[0][j] * det(&tmp, size_matrix - 1);
+            sign = -sign;
         }
-        if (tmp_size == 2) {
-            double two_de = two_det(&tmp);
-            if (i % 2 != 0) res += mat->matrix[0][i] * two_de;
-            else res -= mat->matrix[0][i] * two_de;
-            //print_matrix(tmp);
-            s21_remove_matrix(&tmp);
-            //printf("%lf\n", res);
-        }
-        if (size == max_size) {
-            printf("mat[0] = %lf\n", mat->matrix[0][i]);
-            if (i % 2 == 0) (*result) +=  mat->matrix[0][i]* res;
-            else (*result) -=  mat->matrix[0][i]*res;
-            printf("%lf\n", *result / mat->matrix[0][i]);
-        }
+        s21_remove_matrix(&tmp);
+        return determ;
     }
 }
-
-// void det(matrix_t *matrix_t, int size_matrix, double *result) {
-    
-
-
-// }
 
 int s21_determinant(matrix_t *A, double *result) {
     int err = SUCCESS, correct = is_correct_matrix(A);
     if (correct) {
         int rows = A->rows, cols = A->columns;
         if (rows == cols) {
-
+            *result = det(A, rows);
         } else err = FAILURE;
     } else err = FAILURE;
     return err;
 }
 int s21_calc_complements(matrix_t *A, matrix_t *result) {
+    int err = SUCCESS, correct = is_correct_matrix(A);
+    if (correct) {
+        int rows = A->rows, cols = A->columns;
+        if (rows == cols) {
+            matrix_t tmp;
+            s21_create_matrix(rows, cols, &tmp);
+            s21_create_matrix(rows, cols, result);
+            for (int i = 0; i < rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    cut_matrix(i ,j, &tmp, A, rows);
+                    result->matrix[i][j] = det(&tmp, rows - 1);
+                }
+            }
+            s21_remove_matrix(&tmp);
+        } else err = FAILURE;
+    } else err = FAILURE;
+    return err;
+}
 
+int s21_inverse_matrix(matrix_t *A, matrix_t *result) {
+    int err = SUCCESS, correct = is_correct_matrix(A);
+    if (correct) {
+        int rows = A->rows, cols = A->columns;
+        if (rows == cols) {
+            double determ;
+            determ = det(A, 3);
 
+            if (fabs (determ) < 1e-60) err = FAILURE;
+            else {
+                matrix_t minor_matrix, transposed_minmat;
+                s21_calc_complements(A, &minor_matrix);
+                for (int i = 0; i < rows; i++) {
+                    for (int j = 0; j < cols; j++) {
+                        if ((i + j) % 2 == 1) minor_matrix.matrix[i][j] *= -1;
+                    }
+                }
+
+                s21_transpose(&minor_matrix, &transposed_minmat);
+                double koef = 1.0/determ;
+                s21_mult_number(&transposed_minmat, koef, result);
+                s21_remove_matrix(&minor_matrix);
+                s21_remove_matrix(&transposed_minmat);
+            }
+        } else err = FAILURE;
+    } else err = FAILURE;
+    return err;
 }
