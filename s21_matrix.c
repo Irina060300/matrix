@@ -108,7 +108,7 @@ int s21_eq_matrix(matrix_t *A, matrix_t *B) {
       for (int j = 0; j < cols; j++) {
         if (fabs(A->matrix[i][j]) < 1e-300 && fabs(B->matrix[i][j]) < 1e-300)
           continue;
-        if (fabs(A->matrix[i][j] - B->matrix[i][j]) > 1e-16) {
+        if (fabs(A->matrix[i][j] - B->matrix[i][j]) > 1e-12) {
           err = FAILURE;
           // printf("A[%d][%d] = %.16lf, B[%d][%d] = %.16lf\n", i, j,
           // A->matrix[i][j], i, j, B->matrix[i][j]);
@@ -306,6 +306,7 @@ int s21_calc_complements(matrix_t *A, matrix_t *result) {
         for (int j = 0; j < cols; j++) {
           cut_matrix(i, j, &tmp, A, rows);
           result->matrix[i][j] = det(&tmp, rows - 1);
+          if ((i + j) % 2 != 0) result->matrix[i][j] *= -1;
         }
       }
       s21_remove_matrix(&tmp);
@@ -329,12 +330,6 @@ int s21_inverse_matrix(matrix_t *A, matrix_t *result) {
       else {
         matrix_t minor_matrix, transposed_minmat;
         s21_calc_complements(A, &minor_matrix);
-        for (int i = 0; i < rows; i++) {
-          for (int j = 0; j < cols; j++) {
-            if ((i + j) % 2 == 1) minor_matrix.matrix[i][j] *= -1;
-          }
-        }
-
         s21_transpose(&minor_matrix, &transposed_minmat);
         double koef = 1.0 / determ;
         s21_mult_number(&transposed_minmat, koef, result);
