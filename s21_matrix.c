@@ -37,67 +37,6 @@ void s21_remove_matrix(matrix_t *A) {
   }
   free(A->matrix);
 }
-// int main() {
-//     // matrix_t A, result;
-//     // int rows_a = 3, cols_a = 3;
-//     // s21_create_matrix(rows_a, cols_a, &A);
-//     // A.matrix[0][0] = 1;
-//     // A.matrix[0][1] = 2;
-//     // A.matrix[0][2] = 3;
-//     // A.matrix[1][0] = 0;
-//     // A.matrix[1][1] = 4;
-//     // A.matrix[1][2] = 2;
-//     // A.matrix[2][0] = 5;
-//     // A.matrix[2][1] = 2;
-//     // A.matrix[2][2] = 1;
-//     // // s21_create_matrix(rows_b, cols_b, &B);
-//     // // for (int i = 0; i < rows_a; i++) {
-//     // //     for (int j = 0; j < cols_a; j++) {
-//     // //         A.matrix[i][j] =rand() % 15;
-//     // //     }
-//     // // }
-//     // // for (int i = 0; i < rows_b; i++) {
-//     // //     for (int j = 0; j < cols_b; j++) {
-//     // //         B.matrix[i][j] = (double) (rand() % 50) / 2;
-//     // //     }
-//     // // }
-//     // // int res = s21_sub_matrix(&A, &B, &result);
-//     // //s21_transpose(&A, &result);
-//     // print_matrix(A);
-
-//     // // double ros = 0;
-//     // // // int max_size = 5;
-//     // // ros = det(&A, 3);
-//     // //printf("RESSS %lf", ros);
-//     // s21_inverse_matrix(&A, &result);
-//     // print_matrix(result);
-//     // s21_remove_matrix(&A);
-//     // s21_remove_matrix(&result);
-//     // // print_matrix(B);
-//     unsigned int seed = 0;
-//     const int rows = rand_r(&seed) % 100 + 1;
-//     const int cols = rand_r(&seed) % 100 + 1;
-//     matrix_t A = {0}, B = {0}, check = {0}, result = {0};
-//     s21_create_matrix(rows, cols, &A);
-//     s21_create_matrix(rows, cols, &B);
-//     s21_create_matrix(rows, cols, &check);
-//     double k = 0.1;
-//     for (int i = 0; i < rows; i++) {
-//         for (int j = 0; j < cols; j++) {
-//             double rand_val = (double) (rand_r(&seed) % 3001 - 1500 + k);
-//             A.matrix[i][j] = rand_val;
-//             B.matrix[i][j] = rand_val + 0.015;
-//             check.matrix[i][j] = A.matrix[i][j] + B.matrix[i][j];
-//             k += 0.000001;
-//         }
-//     }
-//     s21_sum_matrix(&A, &B, &result);
-//     int c = s21_eq_matrix(&check, &result);
-//     printf("%d\n", c);
-//     // print_matrix(check);
-//     // print_matrix(result);
-//     return 0;
-// }
 
 int s21_eq_matrix(matrix_t *A, matrix_t *B) {
   int err = SUCCESS;
@@ -108,7 +47,7 @@ int s21_eq_matrix(matrix_t *A, matrix_t *B) {
       for (int j = 0; j < cols; j++) {
         if (fabs(A->matrix[i][j]) < 1e-300 && fabs(B->matrix[i][j]) < 1e-300)
           continue;
-        if (fabs(A->matrix[i][j] - B->matrix[i][j]) > 1e-12) {
+        if (fabs(A->matrix[i][j] - B->matrix[i][j]) > 1e-7) {
           err = FAILURE;
           // printf("A[%d][%d] = %.16lf, B[%d][%d] = %.16lf\n", i, j,
           // A->matrix[i][j], i, j, B->matrix[i][j]);
@@ -309,6 +248,7 @@ int s21_calc_complements(matrix_t *A, matrix_t *result) {
           if ((i + j) % 2 != 0) result->matrix[i][j] *= -1;
         }
       }
+      //print_matrix(*result);
       s21_remove_matrix(&tmp);
     } else
       err = FAILURE;
@@ -325,7 +265,7 @@ int s21_inverse_matrix(matrix_t *A, matrix_t *result) {
       double determ;
       determ = det(A, 3);
 
-      if (fabs(determ) < 1e-60)
+      if (fabs(determ) < 1e-300)
         err = FAILURE;
       else {
         matrix_t minor_matrix, transposed_minmat;
